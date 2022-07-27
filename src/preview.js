@@ -1,17 +1,15 @@
 /**
- * Internal dependencies
- */
-/**
  * WordPress dependencies
  */
 import { __, sprintf } from '@wordpress/i18n';
+
+/**
+ * Internal dependencies
+ */
 import countries from '../assets/countries.json';
 import continentNames from '../assets/continent-names.json';
 import continents from '../assets/continents.json';
 import { getEmojiFlag } from './utils';
-/**
- * WordPress dependencies
- */
 
 export default function Preview( { countryCode, relatedPosts } ) {
 	if ( ! countryCode ) return null;
