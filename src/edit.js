@@ -7,7 +7,7 @@ import './editor.scss';
  * WordPress dependencies
  */
 import { edit, globe } from '@wordpress/icons';
-import { BlockControls } from '@wordpress/block-editor';
+import { useBlockProps, BlockControls } from '@wordpress/block-editor';
 import {
 	ComboboxControl,
 	Placeholder,
@@ -16,6 +16,7 @@ import {
 } from '@wordpress/components';
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import apiFetch from '@wordpress/api-fetch';
 
 /**
  * Internal dependencies
@@ -31,9 +32,7 @@ export default function Edit( { attributes, setAttributes } ) {
 		label: getEmojiFlag( code ) + '  ' + countries[ code ] + ' — ' + code,
 	} ) );
 
-	const [ isPreview, setPreview ] = useState();
-
-	useEffect( () => setPreview( countryCode ), [ countryCode ] );
+	const [ isPreview, setPreview ] = useState( false );
 
 	const handleChangeCountry = () => {
 		if ( isPreview ) setPreview( false );
@@ -51,31 +50,46 @@ export default function Edit( { attributes, setAttributes } ) {
 
 	useEffect( () => {
 		async function getRelatedPosts() {
+			setPreview( countryCode );
+
+			if ( ! countryCode ) return;
+
 			const postId = window.location.href.match( /post=([\d]+)/ )[ 1 ];
-			const response = await window.fetch(
-				`/wp-json/wp/v2/posts?search=${ countries[ countryCode ] }&exclude=${ postId }`
-			);
 
-			if ( ! response.ok )
-				throw new Error( `HTTP error! Status: ${ response.status }` );
+			const query = {
+				search: countries[ countryCode ],
+				exclude: postId,
+			};
 
-			const posts = await response.json();
-
-			setAttributes( {
-				relatedPosts:
-					posts?.map( ( relatedPost ) => ( {
-						...relatedPost,
-						title: relatedPost.title?.rendered || relatedPost.link,
-						excerpt: relatedPost.excerpt?.rendered || '',
-					} ) ) || [],
-			} );
+			await apiFetch( {
+				path: `/wp/v2/posts/?${ new URLSearchParams(
+					query
+				).toString() }`,
+			} )
+				.then( ( posts ) => {
+					setAttributes( {
+						relatedPosts:
+							posts?.map( ( relatedPost ) => ( {
+								...relatedPost,
+								title:
+									relatedPost.title?.rendered ||
+									relatedPost.link,
+								excerpt: relatedPost.excerpt?.rendered || '',
+							} ) ) || [],
+					} );
+				} )
+				.catch( ( error ) => {
+					throw new Error(
+						`HTTP error! Status: ${ error.data.status }`
+					);
+				} );
 		}
 
 		getRelatedPosts();
 	}, [ countryCode, setAttributes ] );
 
 	return (
-		<>
+		<div { ...useBlockProps() }>
 			<BlockControls>
 				<ToolbarGroup>
 					<ToolbarButton
@@ -113,6 +127,6 @@ export default function Edit( { attributes, setAttributes } ) {
 					</Placeholder>
 				) }
 			</div>
-		</>
+		</div>
 	);
 }
