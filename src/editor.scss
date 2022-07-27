@@ -1,3 +1,15 @@
-.wp-block-xwp-country-card .components-form-token-field__suggestion {
-	white-space: pre-wrap;
+.wp-block-xwp-country-card {
+	display: flex;
+	gap: 20px;
+	align-items: flex-start;
+	align-content: flex-start;
+
+	.xwp-country-card,
+	.components-placeholder {
+		flex: 1;
+	}
+
+	.components-form-token-field__suggestion {
+		white-space: pre-wrap;
+	}
 }
