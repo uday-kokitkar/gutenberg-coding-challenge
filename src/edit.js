@@ -14,7 +14,10 @@ import {
 	ToolbarButton,
 	ToolbarGroup,
 } from '@wordpress/components';
-import { useEffect, useState } from '@wordpress/element';
+import {
+	useEffect,
+	useState
+} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
 
@@ -32,7 +35,9 @@ export default function Edit( { attributes, setAttributes } ) {
 		label: getEmojiFlag( code ) + '  ' + countries[ code ] + ' — ' + code,
 	} ) );
 
-	const [ isPreview, setPreview ] = useState( false );
+	const [ isPreview, setPreview ] = useState();
+
+	useEffect( () => setPreview( countryCode ), [ countryCode ] );
 
 	const handleChangeCountry = () => {
 		if ( isPreview ) setPreview( false );
@@ -50,11 +55,9 @@ export default function Edit( { attributes, setAttributes } ) {
 
 	useEffect( () => {
 		async function getRelatedPosts() {
-			setPreview( countryCode );
-
 			if ( ! countryCode ) return;
 
-			const postId = window.location.href.match( /post=([\d]+)/ )[ 1 ];
+			const postId = wp.data.select( 'core/editor' ).getCurrentPostId();
 
 			const query = {
 				search: countries[ countryCode ],
@@ -100,33 +103,31 @@ export default function Edit( { attributes, setAttributes } ) {
 					/>
 				</ToolbarGroup>
 			</BlockControls>
-			<div>
-				{ isPreview ? (
-					<Preview
-						countryCode={ countryCode }
-						relatedPosts={ relatedPosts }
+
+			{ ! isPreview && (
+				<Placeholder
+					icon={ globe }
+					label={ __( 'XWP Country Card', 'xwp-country-card' ) }
+					isColumnLayout={ true }
+					instructions={ __(
+						'Type in a name of a contry you want to display on you site.',
+						'xwp-country-card'
+					) }
+				>
+					<ComboboxControl
+						label={ __( 'Country', 'xwp-country-card' ) }
+						hideLabelFromVision
+						options={ options }
+						value={ countryCode }
+						onChange={ handleChangeCountryCode }
+						allowReset={ true }
 					/>
-				) : (
-					<Placeholder
-						icon={ globe }
-						label={ __( 'XWP Country Card', 'xwp-country-card' ) }
-						isColumnLayout={ true }
-						instructions={ __(
-							'Type in a name of a contry you want to display on you site.',
-							'xwp-country-card'
-						) }
-					>
-						<ComboboxControl
-							label={ __( 'Country', 'xwp-country-card' ) }
-							hideLabelFromVision
-							options={ options }
-							value={ countryCode }
-							onChange={ handleChangeCountryCode }
-							allowReset={ true }
-						/>
-					</Placeholder>
-				) }
-			</div>
+				</Placeholder>
+			) }
+			<Preview
+				countryCode={ countryCode }
+				relatedPosts={ relatedPosts }
+			/>
 		</div>
 	);
 }
